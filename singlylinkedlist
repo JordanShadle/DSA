@@ -1,0 +1,150 @@
+//
+//  main.c
+//  LinkedList
+//
+//  Created by Jordan Shadle on 12/24/23.
+//
+#include <stdlib.h>
+#include <stdio.h>
+
+struct node {
+    int data;
+    struct node *next;
+};
+
+struct node *create(int data) {
+    struct node *newnode = (struct node *)malloc(sizeof(struct node));
+    newnode->data = data;
+    newnode->next = NULL;
+    return newnode;
+}
+
+int count_nodes(struct node *head) {
+    int count = 0;
+    if(head == NULL) {
+        return count = 0;
+    }
+    struct node *ptr = head;
+    while(ptr->next != NULL) {
+        count++;
+        ptr = ptr->next;
+    }
+    count++;
+    return count;
+}
+
+struct node *insert_start(struct node *head, int data) {
+    struct node *newnode = create(data);
+    newnode->next = head;
+    head = newnode;
+    return head;
+}
+
+struct node *insert_pos(struct node *head, int data, int pos) {
+    int match = count_nodes(head);
+    
+    if(head == NULL || pos > match) {
+        printf("Head pointer is NULL or the position entered is greater than the size of the list.");
+        return 0;
+    }
+    
+    struct node *ptr = head;
+    struct node *ptr2 = head;
+    struct node *newnode = create(data);
+    
+    for(int i = 1; i < pos; i++) {
+        ptr2 = ptr;
+        ptr = ptr->next;
+    }
+    
+    ptr2->next = newnode;
+    newnode->next = ptr;
+    
+    return head;
+}
+
+struct node *insert_end(struct node *head, int data) {
+    struct node *ptr;
+    struct node *newnode = create(data);
+    ptr = head;
+    while(ptr->next != NULL) {
+        ptr = ptr->next;
+    }
+    ptr->next = newnode;
+    
+    return head;
+}
+
+void print_list(struct node *head) {
+    if(head != NULL) {
+        struct node *ptr = head;
+        printf("%d\n", ptr->data);
+        while(ptr->next != NULL) {
+            ptr = ptr->next;
+            printf("%d\n", ptr->data);
+        }
+    }
+    return;
+}
+
+struct node *delete_start(struct node *head) {
+    struct node *ptr = head;
+    head = head->next;
+    free(ptr);
+    return head;
+}
+
+struct node *delete_pos(struct node *head, int pos) {
+    int match = count_nodes(head);
+    
+    if(head == NULL || pos > match) {
+        printf("Head pointer is NULL or the position entered is greater than the size of the list.");
+        return 0;
+    }
+    
+    struct node *ptr = head;
+    struct node *ptr2 = head;
+    
+    for(int i = 1; i < pos; i++) {
+        ptr2 = ptr;
+        ptr = ptr->next;
+    }
+    
+    ptr2->next = ptr->next;
+    free(ptr);
+    
+    return head;
+}
+
+struct node *delete_end(struct node *head) {
+    struct node *ptr = head;
+    struct node *ptr2 = head;
+    while(ptr->next != NULL) {
+        ptr2 = ptr;
+        ptr = ptr->next;
+    }
+    ptr2->next = NULL;
+    free(ptr);
+    ptr = NULL;
+    return head;
+}
+
+int main(void) {
+    struct node *head = create(5);
+    
+    insert_end(head, 50);
+    insert_end(head, 42);
+    insert_end(head, 15);
+    insert_end(head, 8);
+    head = insert_start(head, 13);
+    head = insert_start(head, 70);
+    head = delete_start(head);
+    head = insert_pos(head, 22, 4);
+    
+    head = delete_pos(head, 5);
+    
+    print_list(head);
+    printf("%d\n", count_nodes(head));
+    
+    return 0;
+}
