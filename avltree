@@ -8,265 +8,205 @@ struct node {
     int height;
 };
 
-struct node *createnode(int data) {
-    struct node *create = (struct node *)malloc(sizeof(struct node));
-
-    if(create != NULL) {
-        create->data = data;
-        create->left = NULL;
-        create->right = NULL;
-        create->height = 1;
-    }
-
-    return create;
+int max(int a, int b) {
+    return (a > b)? a : b;
 }
 
 int height(struct node *N) {
-    if (N == NULL) {
+    if(N == NULL) {
         return 0;
     }
     return N->height;
 }
 
-int max(int a, int b) {
-    return (a > b)? a : b;
-}
-
-int getBalanceFactor(struct node *node) {
-    if(node == NULL) {
+int getbalance(struct node *root) {
+    if(root == NULL) {
         return 0;
     }
-    return height(node->left) - height(node->right);
-}
-
-struct node *rightrotation(struct node *y) {
-    struct node *x = y->left;
-    struct node *T2 = x->right;
-
-    x->right = y;
-    y->left = T2;
-
-    y->height = max(height(y->left), height(y->right)) + 1;
-    x->height = max(height(x->left), height(x->right)) + 1;
-
-    return x;
+    return height(root->left) - height(root->right);
 }
 
 struct node *leftrotation(struct node *x) {
     struct node *y = x->right;
     struct node *T2 = y->left;
-
+    
     y->left = x;
     x->right = T2;
-
-    x->height = max(height(x->left), height(x->right)) + 1;
-    y->height = max(height(y->left), height(y->right)) + 1;
-
+    
+    x->height = 1 + max(height(x->left), height(x->right));
+    y->height = 1 + max(height(y->left), height(y->right));
+    
     return y;
 }
 
-struct node *insert(struct node *node, int data) {
-
-    if(node == NULL) {
-        return createnode(data);
-    }
-
-    if(data < node->data) {
-        node->left = insert(node->left, data);
-    }
-
-    else if(data > node->data) {
-        node->right = insert(node->right, data);
-    }
-
-    else {
-        return node;
-    }
-
-    node->height = 1 + max(height(node->left), height(node->right));
-
-    int balance = getBalanceFactor(node);
-
-    // Left Left Case
-    if(balance > 1 && data < node->left->data) {
-        return rightrotation(node);
-    }
-
-    // Right Right Case
-    if(balance < -1 && data > node->right->data) {
-        return leftrotation(node);
-    }
-
-    // Left Right Case
-    if(balance > 1 && data > node->left->data) {
-        node->left = leftrotation(node->left);
-        return rightrotation(node);
-    }
-
-    // Right Left Case
-    if(balance < -1 && data < node->right->data) {
-        node->right = rightrotation(node->right);
-        return leftrotation(node);
-    }
-
-    return node;
+struct node *rightrotation(struct node *y) {
+    struct node *x = y->left;
+    struct node *T2 = x->right;
+    
+    x->right = y;
+    y->left = T2;
+    
+    y->height = 1 + max(height(y->left), height(y->right));
+    x->height = 1 + max(height(x->left), height(x->right));
+    
+    return x;
 }
 
-void preorder(struct node *root) {
+struct node *create(int data) {
+    struct node *newnode = (struct node *)malloc(sizeof(struct node));
+    newnode->data = data;
+    newnode->left = newnode->right = NULL;
+    newnode->height = 1;
+    return newnode;
+}
+
+struct node *insert(struct node *root, int data) {
     if(root == NULL) {
-        return;
+        return create(data);
     }
-
-    printf("%d\n", root->data);
-    preorder(root->left);
-    preorder(root->right);
-}
-
-void inorder(struct node *root) {
-    if(root == NULL) {
-        return;
+    if(data < root->data) {
+        root->left = insert(root->left, data);
     }
-
-    inorder(root->left);
-    printf("%d\n", root->data);
-    inorder(root->right);
-}
-
-void postorder(struct node *root) {
-    if(root == NULL) {
-        return;
-    }
-
-    postorder(root->left);
-    postorder(root->right);
-    printf("%d\n", root->data);
-}
-
-int getmin(struct node *root) {
-    struct node *temp = root;
-    while(temp->left != NULL) {
-        temp = temp->left;
-    }
-    return temp->data;
-}
-
-struct node *deletion(struct node *node, int data) {
-    if(node == NULL) {
-        return NULL;
-    }
-
-    if(data < node->data) {
-        node->left = deletion(node->left, data);
-    }
-    else if(data > node->data) {
-        node->right = deletion(node->right, data);
+    else if(data > root->data) {
+        root->right = insert(root->right, data);
     }
     else {
-        if(node->left == NULL && node->right == NULL) {
-            free(node);
-            return NULL;
+        return root;
+    }
+    root->height = 1 + max(height(root->left), height(root->right));
+    
+    int balance = getbalance(root);
+    
+    //Left Left Case
+    if(balance > 1 && data < root->left->data) {
+        return rightrotation(root);
+    }
+    //Left Right Case
+    if(balance > 1 && data > root->left->data) {
+        root->left = leftrotation(root->left);
+        return rightrotation(root);
+    }
+    //Right Right Case
+    if(balance < -1 && data > root->right->data) {
+        return leftrotation(root);
+    }
+    //Right Left Case
+    if(balance < -1 && data < root->right->data) {
+        root->right = rightrotation(root->right);
+        return leftrotation(root);
+    }
+    
+    return root;
+}
+
+struct node *deletion(struct node *root, int data) {
+    if(root == NULL) {
+        return root;
+    }
+    if(data < root->data) {
+        root->left = deletion(root->left, data);
+        return root;
+    }
+    if(data > root->data) {
+        root->right = deletion(root->right, data);
+        return root;
+    }
+    
+    if(root->left == NULL) {
+        struct node *temp = root->right;
+        free(root);
+        return temp;
+    }
+    if(root->right == NULL) {
+        struct node *temp = root->left;
+        free(root);
+        return temp;
+    }
+    
+    else {
+        struct node *succparent = root;
+        struct node *succ = succparent->right;
+        
+        while(succ->left != NULL) {
+            succparent = succ;
+            succ = succ->left;
         }
-        else if(node->left == NULL) {
-            struct node *temp = node->right;
-            free(node);
-            return temp;
-        }
-        else if(node->right == NULL) {
-            struct node *temp = node->left;
-            free(node);
-            return temp;
+        
+        if(succparent != root) {
+            succparent->left = succ->right;
         }
         else {
-            int rightmin = getmin(node->right);
-            node->data = rightmin;
-            node->right = deletion(node->right, rightmin);
+            succparent->right = succ->right;
         }
+        
+        root->data = succ->data;
+        free(succ);
+        
+        root->height = 1 + max(height(root->left), height(root->right));
+        int balance = getbalance(root);
+        
+        //Left Left Case
+        if(balance > 1 && getbalance(root->left) >= 0) {
+            return rightrotation(root);
+        }
+        //Left Right Case
+        if(balance > 1 && getbalance(root->left) < 0) {
+            root->left = leftrotation(root->left);
+            return rightrotation(root);
+        }
+        //Right Right Case
+        if(balance < -1 && getbalance(root->right) <= 0) {
+            return leftrotation(root);
+        }
+        //Right Left Case
+        if(balance < -1 && getbalance(root->right) > 0) {
+            root->right = rightrotation(root->right);
+            return leftrotation(root);
+        }
+        
+        return root;
     }
-
-    node->height = 1 + max(height(node->left), height(node->right));
-
-    int balance = getBalanceFactor(node);
-
-    // Left Left Case
-    if(balance > 1 && getBalanceFactor(node->left) >= 0) {
-        return rightrotation(node);
-    }
-
-    // Left Right Case
-    if(balance > 1 && getBalanceFactor(node->left) < 0) {
-        node->left = leftrotation(node->left);
-        return rightrotation(node);
-    }
-
-    // Right Right Case
-    if(balance < -1 && getBalanceFactor(node->right) <= 0) {
-        return leftrotation(node);
-    }
-
-    // Right Left Case
-    if(balance < -1 && getBalanceFactor(node->right) > 0) {
-        node->right = rightrotation(node->right);
-        return leftrotation(node);
-    }
-
-    return node;
 }
 
-void print_tree(struct node *root) {
+void preorder_dfs(struct node *root) {
     if(root == NULL) {
-        printf("---<empty>---\n");
         return;
-    } else {
-        printf("value = %d\n", root->data);
-        printf("left\n");
-        print_tree(root->left);
-        printf("right\n");
-        print_tree(root->right);
     }
+    
+    printf("%d\n", root->data);
+    preorder_dfs(root->left);
+    preorder_dfs(root->right);
 }
 
-int main() {
-    struct node *tree = createnode(50);
-
-    tree = insert(tree, 25);
-    tree = insert(tree, 50);
-    tree = insert(tree, 75);
-    tree = insert(tree, 100);
-    tree = insert(tree, 125);
-    tree = insert(tree, 150);
-    tree = insert(tree, 175);
-    tree = insert(tree, 200);
-    tree = insert(tree, 225);
-    tree = insert(tree, 250);
-    tree = insert(tree, 275);
-    tree = insert(tree, 300);
-    tree = insert(tree, 325);
-    tree = insert(tree, 350);
-    tree = insert(tree, 375);
+void inorder_dfs(struct node *root) {
+    if(root == NULL) {
+        return;
+    }
     
-    preorder(tree);
-    printf("\n");
-    inorder(tree);
-    printf("\n");
-    postorder(tree);
-    printf("\n");
-    preorder(tree);
+    inorder_dfs(root->left);
+    printf("%d\n", root->data);
+    inorder_dfs(root->right);
+}
 
-    tree = deletion(tree, 175);
-    tree = deletion(tree, 200);
-    tree = deletion(tree, 225);
-    tree = deletion(tree, 250);
-    tree = deletion(tree, 275);
-    tree = deletion(tree, 300);
-    tree = deletion(tree, 325);
-    tree = deletion(tree, 350);
-    tree = deletion(tree, 375);
+void postorder_dfs(struct node *root) {
+    if(root == NULL) {
+        return;
+    }
+    
+    postorder_dfs(root->left);
+    postorder_dfs(root->right);
+    printf("%d\n", root->data);
+}
 
-    printf("\n");
-    print_tree(tree);
-
-    printf("\n");
-    printf("%d", height(tree));
-
+int main(void) {
+    struct node *root = create(100);
+    root = insert(root, 8);
+    root = insert(root, 55);
+    root = insert(root, 9);
+    root = insert(root, 143);
+    root = insert(root, 263);
+    root = insert(root, 99);
+    root = insert(root, 47);
+    preorder_dfs(root);
     return 0;
 }
